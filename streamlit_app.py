@@ -1,38 +1,40 @@
-from collections import namedtuple
-import altair as alt
-import math
 import pandas as pd
 import streamlit as st
+import requests
+import json
 
-"""
-# Welcome to Streamlit!
-
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+st.set_page_config(layout="wide")
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+def report_value(provider_id, feature, key):
+    requests.post(f"https://a1zrpiqu6b.execute-api.eu-west-2.amazonaws.com/alpha/report?id={provider_id}&feature={feature}&key={key}")
 
-    Point = namedtuple('Point', 'x y')
-    data = []
 
-    points_per_turn = total_points / num_turns
+def clean_str(string):
+    return string.replace("_", " ").title()
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
+response = requests.get('https://a1zrpiqu6b.execute-api.eu-west-2.amazonaws.com/alpha/providers')
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+data = json.loads(response.content)
+data = {provider["id"]: {k: v for k, v in provider.items() if k != "id"} for provider in data}
+# data
+
+
+provider_id = st.selectbox("Select Provider:", data.keys(), format_func=lambda x: data[x]["name"]["0"]["value"])
+provider = data[provider_id]
+
+
+st.title(provider["name"]["0"]["value"]) 
+st.write(provider_id)
+
+features_to_display = ["address", "opening_times", "phones", "emails", "notes", "services"]
+for feature in features_to_display:
+    feature_dict = provider[feature]
+    st.header(clean_str(feature))
+    
+    for key, value in feature_dict.items():
+        report_args = (provider_id, feature, key)
+        col_1, col_2, col_3 = st.columns([2,7,1])
+        col_1.write(clean_str(key))
+        col_2.write(value["value"])
+        col_3.button("Report", key=str(report_args), on_click=report_value, args=report_args)
