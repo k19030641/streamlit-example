@@ -3,8 +3,8 @@ import streamlit as st
 import requests
 import json
 
-st.set_page_config(layout="wide")
-
+st.set_page_config(layout="wide", page_title="FindSexualHealth",
+        page_icon="🩺")
 
 def report_value(provider_id, feature, key):
     requests.post(f"https://a1zrpiqu6b.execute-api.eu-west-2.amazonaws.com/alpha/report?id={provider_id}&feature={feature}&key={key}")
