@@ -3,8 +3,13 @@ import streamlit as st
 import requests
 import json
 
-st.set_page_config(layout="wide", page_title="FindSexualHealth",
-        page_icon="🩺")
+st.set_page_config(
+    layout="wide", 
+    page_title="FindSexualHealth",
+    page_icon="🏥"
+)
+st.title("FindSexualHealth")
+
 
 def report_value(provider_id, feature, key):
     requests.post(f"https://a1zrpiqu6b.execute-api.eu-west-2.amazonaws.com/alpha/report?id={provider_id}&feature={feature}&key={key}")
@@ -31,11 +36,11 @@ provider_id = st.selectbox("Select Provider:", data.keys(), format_func=lambda x
 provider = data[provider_id]
 
 
-st.title(provider["name"]["0"]["value"]) 
+st.header(provider["name"]["0"]["value"]) 
 st.write(provider_id)
 
 features_to_display = ["address", "opening_times", "phones", "emails", "notes", "services"]
 for feature in features_to_display:
     feature_dict = provider[feature]
-    st.header(clean_str(feature))
+    st.subheader(clean_str(feature))
     display_feature(feature_dict=feature_dict)
